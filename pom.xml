@@ -7,17 +7,31 @@
     <bundle.namespace>org.wiperdog.jobmanager</bundle.namespace>
   </properties>
   <parent>
-  	<artifactId>wiperdog</artifactId>
+  	<artifactId>wiperdog-parent</artifactId>
   	<groupId>org.wiperdog</groupId>
-  	<version>0.1.0</version>
+  	<version>0.1.0-SNAPSHOT</version>
   </parent>
 
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.wiperdog</groupId>
   <artifactId>org.wiperdog.jobmanager</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.0-SNAPSHOT</version>
 
   <name>${bundle.symbolicName}</name>
+  <description>wiperdog job manager</description>
+  <url>http://www.wiperdog.org/</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>scm:git:https://github.com/wiperdog/org.wiperdog.jobmanager.git</url>
+    <connection>scm:git:https://github.com/wiperdog/org.wiperdog.jobmanager.git</connection>
+    <developerConnection>scm:git:https://github.com/wiperdog/org.wiperdog.jobmanager.git</developerConnection>
+  </scm>
 
   <dependencies>
   	<dependency>
@@ -72,7 +86,7 @@
     <dependency>
     	<groupId>org.wiperdog</groupId>
     	<artifactId>org.wiperdog.rshell.api</artifactId>
-    	<version>0.1.0</version>
+    	<version>[0.0,1.0)</version>
     </dependency>
     <dependency>
     	<groupId>junit</groupId>
