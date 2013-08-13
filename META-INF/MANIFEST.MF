@@ -1,18 +1,20 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1374746271519
+Bnd-LastModified: 1376369806700
 Build-Jdk: 1.6.0_43
 Built-By: kurohara
 Bundle-Activator: org.wiperdog.jobmanager.internal.Activator
+Bundle-Description: wiperdog job manager
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
 Bundle-ManifestVersion: 2
 Bundle-Name: org.wiperdog.jobmanager
 Bundle-SymbolicName: org.wiperdog.jobmanager
-Bundle-Version: 0.1.0
+Bundle-Version: 0.1.0.SNAPSHOT
 Created-By: Apache Maven Bundle Plugin
 Embed-Dependency: quartz;inline=!org/quartz/jobs/ee/*,c3p0;inline=true
 Export-Package: org.wiperdog.jobmanager;uses:="org.quartz";version="0.1.
- 0",org.wiperdog.jobmanager.dsl;uses:="org.apache.log4j,org.wiperdog.job
- manager,org.quartz,org.apache.commons.digester,org.xml.sax";version="0.
- 1.0",org.quartz;version="0.1.0"
+ 0.SNAPSHOT",org.wiperdog.jobmanager.dsl;uses:="org.apache.log4j,org.wip
+ erdog.jobmanager,org.quartz,org.apache.commons.digester,org.xml.sax";ve
+ rsion="0.1.0.SNAPSHOT",org.quartz;version="0.1.0.SNAPSHOT"
 Import-Package: javax.management,javax.management.openmbean,javax.naming
  ,javax.naming.spi,javax.servlet,javax.servlet.http,javax.sql,javax.tran
  saction,javax.xml.namespace,javax.xml.parsers,javax.xml.xpath,org.apach
