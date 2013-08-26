@@ -14,7 +14,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.wiperdog</groupId>
   <artifactId>org.wiperdog.jobmanager</artifactId>
-  <version>0.2.0</version>
+  <version>0.2.1-SNAPSHOT</version>
 
   <name>${bundle.symbolicName}</name>
   <description>wiperdog job manager</description>
@@ -30,7 +30,7 @@
     <url>scm:git:https://github.com/wiperdog/org.wiperdog.jobmanager.git</url>
     <connection>scm:git:https://github.com/wiperdog/org.wiperdog.jobmanager.git</connection>
     <developerConnection>scm:git:https://github.com/wiperdog/org.wiperdog.jobmanager.git</developerConnection>
-    <tag>v0.2.0</tag>
+    <tag>HEAD</tag>
   </scm>
 
   <dependencies>
