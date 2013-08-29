@@ -51,7 +51,7 @@ import org.apache.log4j.Logger;
 import org.wiperdog.rshell.api.RShellProvider;
 
 public class Activator implements BundleActivator {
-	public static final String PID = "com.insight_tec.pi.jobmanager";
+	public static final String PID = "org.wiperdog.jobmanager";
 	public static final String LOGGERNAME = PID;
 	public static final String KEY_MAXRECEIVESIZE = "shell.maxreceivesize";
 	public static final String KEY_MAXHISTORYDEPTH = "maxhistorydepth";
