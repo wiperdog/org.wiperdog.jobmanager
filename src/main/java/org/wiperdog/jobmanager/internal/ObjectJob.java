@@ -70,5 +70,5 @@ public class ObjectJob extends AbstractGenericJob {
 				exe.stop(me);
 			}
 		}
-	}
+	}	
 }

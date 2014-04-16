@@ -15,6 +15,12 @@
  */
 package org.wiperdog.jobmanager.internal;
 
+import static org.quartz.CronScheduleBuilder.cronSchedule;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobKey.jobKey;
+import static org.quartz.TriggerBuilder.newTrigger;
+import static org.quartz.TriggerKey.triggerKey;
+
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +41,7 @@ import org.quartz.JobExecutionContext;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerBuilder;
@@ -43,36 +50,11 @@ import org.quartz.TriggerListener;
 import org.quartz.UnableToInterruptJobException;
 import org.quartz.impl.matchers.EverythingMatcher;
 import org.quartz.impl.matchers.GroupMatcher;
-import org.apache.log4j.Logger;
-
-import org.wiperdog.rshell.api.RShellProvider;
-
-import static org.quartz.TriggerBuilder.newTrigger;
-import static org.quartz.CronScheduleBuilder.cronSchedule;
-import static org.quartz.JobBuilder.newJob;
-import static org.quartz.JobKey.jobKey;
-import static org.quartz.TriggerKey.*;
-
-import org.quartz.impl.matchers.EverythingMatcher;
-// 2012-08-07 Luvina Insert start
-import org.quartz.SimpleScheduleBuilder;
-// 2012-08-07 Luvina Insert end
-import org.wiperdog.jobmanager.ConditionBoardException;
 import org.wiperdog.jobmanager.Constants;
-import org.wiperdog.jobmanager.Follower;
 import org.wiperdog.jobmanager.JobClass;
 import org.wiperdog.jobmanager.JobExecutable;
 import org.wiperdog.jobmanager.JobFacade;
 import org.wiperdog.jobmanager.JobManagerException;
-import org.wiperdog.jobmanager.JobNet;
-import org.wiperdog.jobmanager.JobReceiver;
-import org.wiperdog.jobmanager.JobResult;
-import org.wiperdog.jobmanager.JobResultSource;
-import org.wiperdog.jobmanager.Operator;
-import org.wiperdog.jobmanager.Predecessor;
-import org.wiperdog.jobmanager.Receiver;
-import org.wiperdog.jobmanager.Terminal;
-import org.wiperdog.jobmanager.TriggerReceiver;
 
 /**
  * JobFacadeImpl
@@ -83,23 +65,23 @@ import org.wiperdog.jobmanager.TriggerReceiver;
  */
 public class JobFacadeImpl implements JobFacade {
 	private final Scheduler sched;
-	private Map<String,JobNet> jobNetMap = new HashMap<String,JobNet>();
+	/*private Map<String,JobNet> jobNetMap = new HashMap<String,JobNet>();*/
 	private Map<String,JobClassImpl> jobClassMap = new HashMap<String,JobClassImpl>();
 	private Logger logger = Logger.getLogger(JobFacadeImpl.class);
 	private Map<String, JobDetail> jobDetailMap = new HashMap<String,JobDetail>();
-	private Map<String, JobReceiver> jobReceiverMap = new HashMap<String,JobReceiver>();
+	/*private Map<String, JobReceiver> jobReceiverMap = new HashMap<String,JobReceiver>();*/
 	
 	private static long seqnum = 0;
 	private static final String AUTONAME_BASE = "JOBOBJECT_";
 	
-	private RShellProvider commander;
+	/*private RShellProvider commander;*/
 	
-	private int maxReceiveSize = ShellJob.DEF_MAX_DATA_SIZE;
-	private int maxHistoryDepth = AbstractGenericJob.DEF_MAX_HISTORYDEPTH;
+	private int maxReceiveSize = Constants.DEF_MAX_DATA_SIZE;
+	private int maxHistoryDepth = Constants.DEF_MAX_HISTORYDEPTH;
 	
-	public void setCommander(RShellProvider commander) {
+	/*public void setCommander(RShellProvider commander) {
 		this.commander = commander;
-	}
+	}*/
 	
 	private String autoname() {
 		return AUTONAME_BASE + ++seqnum;
@@ -112,156 +94,6 @@ public class JobFacadeImpl implements JobFacade {
 		return name;
 	}
 	
-	/**
-	 * JobNetImpl
-	 * JobNet実装
-	 * @author kurohara
-	 *
-	 */
-	private final class JobNetImpl implements JobNet {
-		private final String name;
-		private Map<String, Object> nodeMap = new HashMap<String,Object>();
-		private Logger logger = Logger.getLogger(Activator.LOGGERNAME);
-		
-		public JobNetImpl(String name) {
-			this.name = name;
-			logger.trace("constractor JobNetImpl(" + name + "," + sched.toString() + ")");
-		}
-
-		public Terminal createForceRunTerminal(String name, String jobName) {
-			JobKey k = jobKey(jobName);
-			Terminal t = new ForceRunTerminal(name, sched, k);
-			nodeMap.put(name, t);
-			
-			logger.trace("JobNet(" + this.name + ").createForceRunTerminal(" + name + "," + jobName + ") -> " + t.toString());
-			return t;
-		}
-
-		public Terminal createProhibitTerminal(String name, String jobName) {
-			JobKey k = jobKey(jobName);
-			Terminal t;
-			try {
-				t = new ProhibitTerminal(name, sched, k);
-			} catch (SchedulerException e) {
-				logger.info("failed to create prohibit terminal");
-				return null;
-			}
-			nodeMap.put(name, t);
-
-			logger.trace("JobNet(" + this.name + ").createProhibitTerminal(" + name + "," + jobName + ") -> " + t.toString());
-			
-			return t;
-		}
-
-		public Operator createOrOperator(String name) {
-			Operator o = new OrOperator(name);
-			nodeMap.put(name, o);
-			logger.trace("JobNet(" + this.name + ").createOrOperator(" + name + ") -> " + o.toString());
-			return o;
-		}
-
-		public Operator createAndOperator(String name) {
-			Operator o = new AndOperator(name);
-			nodeMap.put(name, o);
-			logger.trace("JobNet(" + this.name + ").createAndOperator(" + name + ") -> " + o.toString());
-			return o;
-		}
-
-		public Operator createXorOperator(String name) {
-			Operator o = new XorOperator(name);
-			nodeMap.put(name, o);
-			logger.trace("JobNet(" + this.name + ").createXorOperator(" + name + ") -> " + o.toString());
-			return o;
-		}
-
-		public Operator createNotOperator(String name) {
-			Operator o = new NotOperator(name);
-			nodeMap.put(name, o);
-			logger.trace("JobNet(" + this.name + ").createNotOperator(" + name + ") -> " + o.toString());
-			return o;
-		}
-
-		public Operator createCounterOperator(String name, int count) {
-			CounterOperator o = new CounterOperator(name, count);
-			nodeMap.put(name, o);
-			logger.trace("JobNet(" + this.name + ").createNotOperator(" + name + ") -> " + o.toString());
-			return o;
-		}
-
-		public Receiver createInterruptFollower(String name) {
-			Receiver f = new PseudoReceiver();
-			nodeMap.put(name, f);
-			logger.trace("JobNet(" + this.name + ").createInterruptFollower(" + name + ") -> " + f.toString());
-			return f;
-		}
-
-		public void interruptNet(String portName, boolean v) {
-			logger.trace("JobNet(" + this.name + ").interruptNet(" + portName + "," + v + ")");
-			try {
-				PseudoReceiver f = (PseudoReceiver) nodeMap.get(portName);
-				if (f != null) {
-					f.interruptNet(v);
-					return;
-				}
-			} catch (ClassCastException e) {
-				
-			}
-			logger.info("stray interruption(" + portName + ") to jobnet:" + this.name);
-		}
-
-		public List<? extends Object> getNodeList() {
-			logger.trace("JobNet(" + this.name + ").getNodeList()");
-			List<Object> list = new ArrayList<Object>();
-			Set<String> keys = nodeMap.keySet();
-			for (String k : keys) {
-				list.add(nodeMap.get(k));
-			}
-			return list;
-		}
-
-		public Object getNode(String name) {
-			return nodeMap.get(name);
-		}
-
-		public void connect(String upper, String lower) throws ClassCastException, ConditionBoardException {
-			logger.trace("JobNet(" + this.name + ").connect(" + upper + "," + lower + ")");
-			Predecessor oUpper = (Predecessor) nodeMap.get(upper);
-			Follower oLower = (Follower) nodeMap.get(lower);
-			logger.trace("" + this.name + ".connect(" + upper + "," + lower + ")");
-			if (oUpper == null) {
-				logger.trace("no node(" + upper + ") found in nodemap of JobNet(" +this.name + ")");
-					// use corresponding job receiver actually.
-					oUpper = jobReceiverMap.get(upper);
-					if (oUpper == null) {
-						// invalid state, no corresponding receiver exist.
-						logger.debug("no JobReceiver'" + upper + "' found, upper object is null");
-					}
-					// if not found, set null as upper.
-					nodeMap.put(upper, oUpper);
-			}
-			if (oUpper != null && oLower != null) {
-				try {
-					oLower.connectUpperFlow(oUpper);
-				} catch (ConditionBoardException e) {
-					logger.info("establishing jobnet node connection failed between " + upper + " and " + lower);
-					throw e;
-				}
-			} else {
-				logger.info("no such a jobnet node exist:" + (oUpper == null ? upper : (oLower == null ? lower : "")));
-			}
-		}
-
-		public void disconnect(String upper, String lower) {
-			logger.trace("JobNet(" + this.name + ").disconnect(" + upper + "," + lower);
-			// TODO: not implemented yet
-		}
-
-		public String getName() {
-			return name;
-		}
-		
-	}
-
 	/**
 	 * 
 	 * @author kurohara
@@ -288,8 +120,8 @@ public class JobFacadeImpl implements JobFacade {
 		}
 
 		public void triggerMisfired(Trigger arg0) {
-			JobReceiver jr = jobReceiverMap.get(arg0.getJobKey().getName());
-			jr.putEvent(arg0.getKey().getName(), TriggerReceiver.TRIGGEREVENT.MISFIRED, new Date());
+			/*JobReceiver jr = jobReceiverMap.get(arg0.getJobKey().getName());
+			jr.putEvent(arg0.getKey().getName(), TriggerReceiver.TRIGGEREVENT.MISFIRED, new Date());*/
 		}
 
 		public boolean vetoJobExecution(Trigger arg0, JobExecutionContext arg1) {
@@ -306,6 +138,7 @@ public class JobFacadeImpl implements JobFacade {
 		try {
 			sched.getListenerManager().addTriggerListener(new FacadeTriggerListener("JobFacadeTriggerListener"), EverythingMatcher.allTriggers());
 		} catch (SchedulerException e) {
+			e.printStackTrace();
 			logger.info("failed to initialize Trigger Listener");
 			logger.trace("", e);
 			throw new JobManagerException("failed to initialize Trigger Listener", e);
@@ -359,23 +192,24 @@ public class JobFacadeImpl implements JobFacade {
 		}
 	}
 	
-	private void putJobReceiver(String name, JobReceiverImpl receiver) {
+	/*private void putJobReceiver(String name, JobReceiverImpl receiver) {
 		jobReceiverMap.put(name, receiver);
 		jobReceiverMap.put(name + Constants.JOBSUFFIX_INTERRUPTED, receiver.getInterruptedReceiver());
 		jobReceiverMap.put(name + Constants.JOBSUFFIX_MISFIRED, receiver.getMisfiredReceiver());
 		jobReceiverMap.put(name + Constants.JOBSUFFIX_OUTPATTERN, receiver.getOutPatternReceiver());
 		jobReceiverMap.put(name + Constants.JOBSUFFIX_ERRPATTERN, receiver.getErrPatternReceiver());
-	}
+	}*/
 	
-	private void removeJobReceiver(String name) {
+	/*private void removeJobReceiver(String name) {
 		jobReceiverMap.remove(name);
 		jobReceiverMap.remove(name + Constants.JOBSUFFIX_INTERRUPTED);
 		jobReceiverMap.remove(name + Constants.JOBSUFFIX_MISFIRED);
 		jobReceiverMap.remove(name + Constants.JOBSUFFIX_OUTPATTERN);
 		jobReceiverMap.remove(name + Constants.JOBSUFFIX_ERRPATTERN);
-	}
+	}*/
 	
 	private JobDetail createJob(String name, Class<? extends Job> cls, JobDataMap data) throws JobManagerException {
+		System.out.println("Start creating job....");
 		JobDataMap datamap = data;
 		if (datamap == null) {
 			datamap = new JobDataMap();
@@ -392,66 +226,21 @@ public class JobFacadeImpl implements JobFacade {
 		try {
 			sched.addJob(job, true);
 		} catch (SchedulerException e) {
+			e.printStackTrace();
 			logger.info("failed to add job:" + name);
 			throw new JobManagerException("failed to add job:" + name, e);
 		}
 		if (job != null) {
 			jobDetailMap.put(name, job);
 			// create corresponding jobreceiver here
-			try {
+			/*try {
 				JobReceiverImpl receiver = new JobReceiverImpl(sched, jobKey(name), this.maxHistoryDepth);
 				putJobReceiver(name, receiver);
 			} catch (SchedulerException e) {
 				throw new JobManagerException("failed to setup job receiver", e);
-			}
+			}*/
 		}
 		return job;
-	}
-	
-	public JobDetail createControlJob(String name, ControlJobType type, String [] args) throws JobManagerException {
-		JobDataMap data = new JobDataMap();
-		if (args.length == 0) {
-			return null;
-		}
-		data.put(JobTerminateJob.KEY_JOBNAMETOTERM, args[0]);
-		return createJob(name, JobTerminateJob.class, data);
-	}
-	
-	public JobDetail createJob(String name, String[] scriptPathAndArguments, boolean usePredefined) throws JobManagerException {
-		return createJob(name, scriptPathAndArguments, false, false, usePredefined);
-	}
-	
-	public JobDetail createJob(String name, String[] scriptPathAndArguments, boolean useOut, boolean useErr, boolean usePredefined) throws JobManagerException {
-		logger.trace("JobFacadeImpl.createJob(" + name + "," + scriptPathAndArguments.toString() + ")");
-		JobDataMap dataMap = new JobDataMap();
-		dataMap.put(Constants.KEY_TYPE, Constants.JOBTYPE_COMMAND);
-		dataMap.put(Constants.KEY_PROGRAMARGS, scriptPathAndArguments);
-		dataMap.put(Constants.KEY_USEOUT, Boolean.valueOf(useOut));
-		dataMap.put(Constants.KEY_USEERR, Boolean.valueOf(useErr));
-
-		if (usePredefined) {
-			dataMap.put(Constants.KEY_COMMANDER, commander);
-			return createJob(name, CommanderJob.class, dataMap);
-		} else {
-			return createJob(name, ShellJob.class, dataMap);
-		}
-	}
-
-	public JobDetail createJob(String name, String className, String methodSignature,
-			Object[] args) throws JobManagerException {
-		JobDataMap dataMap = new JobDataMap();
-		dataMap.put(Constants.KEY_TYPE, Constants.JOBTYPE_JAVACLASS);
-		dataMap.put(Constants.KEY_JAVACLASS, className);
-		dataMap.put(Constants.KEY_METHOD, methodSignature);
-		dataMap.put(Constants.KEY_ARGS, args);
-		
-		return createJob(name, JavaJob.class, dataMap);
-	}
-
-	public JobDetail createJob(String name, String[] filterspec,
-			String methodSignature, Object[] args) throws JobManagerException {
-		logger.trace("JobFacadeImpl.createJob(" + name + "," + filterspec.toString() + ")");
-		throw new JobManagerException("not supported job creation");
 	}
 	
 	public JobDetail createJob(JobExecutable executable) throws JobManagerException {
@@ -467,7 +256,7 @@ public class JobFacadeImpl implements JobFacade {
 		logger.trace("JobFacadeImpl.removeJob(" + job.getKey().toString() + ")");
 		try {
 			sched.deleteJob(job.getKey());
-			removeJobReceiver(job.getKey().getName());
+			//removeJobReceiver(job.getKey().getName());
 			jobDetailMap.remove(job.getKey().getName());
 		} catch (SchedulerException e) {
 			logger.info("failed to remove job:" + job.getKey().toString());
@@ -475,7 +264,7 @@ public class JobFacadeImpl implements JobFacade {
 		}
 	}
 
-	public List<JobResult> getJobResult(String name) {
+	/*public List<JobResult> getJobResult(String name) {
 
 		JobReceiver receiver = jobReceiverMap.get(name);
 		if (receiver != null && receiver instanceof JobResultSource) {
@@ -496,9 +285,10 @@ public class JobFacadeImpl implements JobFacade {
 			return resultlist;
 		}
 		return null;
-	}
+	}*/
 	
 	public Trigger createTrigger(String name) {
+		System.out.println("JobFacadeImpl.createTrigger(" + name + ")");
 		logger.trace("JobFacadeImpl.createTrigger(" + name + ")");
 		return newTrigger()
 				.withIdentity(autoname(name))
@@ -508,6 +298,7 @@ public class JobFacadeImpl implements JobFacade {
 	}
 
 	public Trigger createTrigger(String name, long delay) {
+		System.out.println("JobFacadeImpl.createTrigger(" + name + "," + delay + ")");
 		logger.trace("JobFacadeImpl.createTrigger(" + name + "," + delay + ")");
 		return newTrigger()
 				.withIdentity(autoname(name))
@@ -516,6 +307,7 @@ public class JobFacadeImpl implements JobFacade {
 	}
 
 	public Trigger createTrigger(String name, Date at) {
+		System.out.println("JobFacadeImpl.createTrigger(" + name + "," + at.toString() + ")");
 		logger.trace("JobFacadeImpl.createTrigger(" + name + "," + at.toString() + ")");
 		return newTrigger()
 				.withIdentity(autoname(name))
@@ -524,6 +316,7 @@ public class JobFacadeImpl implements JobFacade {
 	}
 
 	public Trigger createTrigger(String name, String crondef) throws JobManagerException {
+		System.out.println("JobFacadeImpl.createTrigger(" + name + "," + crondef + ")");
 		logger.trace("JobFacadeImpl.createTrigger(" + name + "," + crondef + ")");
 		try {
 			return newTrigger()
@@ -540,6 +333,8 @@ public class JobFacadeImpl implements JobFacade {
 	}
 
 	public void scheduleJob(JobDetail job, Trigger trigger) throws JobManagerException {
+		System.out.println("================== JobFacadeImpl.scheduleJob("
+	+ job.getKey().toString() + "," + trigger.getKey().toString() + ")");
 		logger.trace("JobFacadeImpl.scheduleJob(" + job.getKey().toString() + "," + trigger.getKey().toString() + ")");
 		try {
 			TriggerBuilder<? extends Trigger> builder = trigger.getTriggerBuilder();
@@ -550,6 +345,7 @@ public class JobFacadeImpl implements JobFacade {
 				sched.scheduleJob(newTrigger);
 			}
 		} catch (SchedulerException e) {
+			System.out.println("==========assigning schedule to job failed:" + trigger.getKey().toString() + " --- " + job.getKey().toString());
 			logger.info("assigning schedule to job failed:" + trigger.getKey().toString() + " --- " + job.getKey().toString(), e);
 			throw new JobManagerException("assigning schedule to job failed:" + trigger.getKey().toString() + " --- " + job.getKey().toString(), e);
 		}
@@ -557,6 +353,8 @@ public class JobFacadeImpl implements JobFacade {
 	
 	// 2012-08-07 Luvina Update start
 	public Trigger createTrigger(String name, long delay, long interval) {
+		System.out.println("JobFacadeImpl.createTrigger(" + name + ", " + delay
+				+ ", " + interval + ")");
 		logger.trace("JobFacadeImpl.createTrigger(" + name + ", " + delay
 				+ ", " + interval + ")");
 		Date startTime = new Date(System.currentTimeMillis() + delay);
@@ -606,81 +404,6 @@ public class JobFacadeImpl implements JobFacade {
 			throw new JobManagerException("failed to unscheduler job:" + trigger.getKey().toString(), e);
 		}
 	}
-
-	public JobNet createJobNet(String name) {
-		logger.trace("JobFacadeImpl.createJobNet(" + name + ")");
-		JobNet net = new JobNetImpl(name);
-		jobNetMap.put(name, net);
-		return net;
-	}
-
-	public JobNet getJobNet(String name) {
-		return jobNetMap.get(name);
-	}
-	
-	public Terminal createForceRunTerminal(JobNet net, String name,
-			String jobName) {
-		logger.trace("JobFacadeImpl.createForceRunTerminal(" + net.getName() + "," + name + "," + jobName + ")");
-		return net.createForceRunTerminal(name, jobName);
-	}
-
-	public Terminal createForceRunTerminal(JobNet net, String name, String jobName, long interval) {
-		ForceRunTerminal t = (ForceRunTerminal) createForceRunTerminal(net, name, jobName);
-		t.setDelay(interval);
-		return  t;
-	}
-	
-	public Terminal createProhibitTerminal(JobNet net, String name,
-			String jobName) {
-		logger.trace("JobFacadeImpl.createProhitTerminal(" + net.getName() + "," + name + "," + jobName + ")");
-		return net.createProhibitTerminal(name, jobName);
-	}
-
-	public Terminal createProhibitTerminal(JobNet net, String name, String jobName, long interval) {
-		ProhibitTerminal t = (ProhibitTerminal) createProhibitTerminal(net, name, jobName);
-		t.setGateTimer(interval);
-		
-		return t;
-	}
-
-	public Operator createOrOperator(JobNet net, String name) {
-		logger.trace("JobFacadeImpl.createOrOperator(" + net.getName() + "," + name + ")");
-		return net.createOrOperator(name);
-	}
-
-	public Operator createAndOperator(JobNet net, String name) {
-		logger.trace("JobFacadeImpl.createAndOperator(" + net.getName() + "," + name + ")");
-		return net.createAndOperator(name);
-	}
-
-	public Operator createXorOperator(JobNet net, String name) {
-		logger.trace("JobFacadeImpl.createXorOperator(" + net.getName() + "," + name +")");
-		return net.createXorOperator(name);
-	}
-
-	public Operator createNotOperator(JobNet net, String name) {
-		logger.trace("JobFacadeImpl.createNotOperator(" + net.getName() + "," + name + ")");
-		return net.createNotOperator(name);
-	}
-
-	public Operator createCounterOperator(JobNet net, String name, int count) {
-		logger.trace("JobFacadeImpl.createNotOperator(" + net.getName() + "," + name + ")");
-		return net.createCounterOperator(name, count);
-	}
-
-	public Receiver createInterruptFollower(JobNet net, String name) {
-		logger.trace("JobFacadeImpl.createInterruptFollower(" + net.getName() + "," + name + ")");
-		return net.createInterruptFollower(name);
-	}
-
-	public void signalNet(JobNet net, String portName, boolean v) {
-		logger.trace("JobFacadeImpl.interruptNet(" + net.getName() + "," + portName + "," + v + ")");
-		net.interruptNet(portName, v);
-	}
-
-	public Set<String> keySetNet() {
-		return jobNetMap.keySet();
-	}
 	
 	public List<Object> getNodeList() {
 		logger.trace("JobFacadeImpll.getNodeList()");
@@ -691,16 +414,6 @@ public class JobFacadeImpl implements JobFacade {
 			list.add(jobDetailMap.get(key));
 		}
 		return list;
-	}
-
-	@SuppressWarnings("unchecked")
-	public List<Object> getNodeList(String netName) {
-		logger.trace("JobFacadeImpl.getNodeList(" + netName + ")");
-		return (List<Object>) jobNetMap.get(netName).getNodeList();
-	}
-	
-	public Object getNode(String netname, String objname) {
-		return jobNetMap.get(netname).getNode(objname);
 	}
 
 	public JobDetail getJob(String name) throws JobManagerException {
@@ -721,16 +434,6 @@ public class JobFacadeImpl implements JobFacade {
 			logger.info("failed to get trigger:" + name);
 			throw new JobManagerException("failed to get trigger:" + name, e);
 		}
-	}
-
-	public void connect(JobNet net, String upper, String lower) throws ClassCastException, ConditionBoardException {
-		logger.trace("JobFacadeImpl.connect(" + net.getName() + "," + upper + "," + lower + ")");
-		net.connect(upper, lower);
-	}
-
-	public void disconnect(JobNet net, String upper, String lower) {
-		logger.trace("JobFacadeImpl.disconnect(" + net.getName() + "," + upper + "," + lower + ")");
-		net.disconnect(upper, lower);
 	}
 
 	public void assignJobClass(String jobName, String className) throws JobManagerException {
@@ -786,6 +489,7 @@ public class JobFacadeImpl implements JobFacade {
 		try {
 			return sched.interrupt(jobKey(name));
 		} catch (UnableToInterruptJobException e) {
+			e.printStackTrace();
 			logger.info("failed to interrupt job: " + name );
 			logger.debug("", e);
 			throw new JobManagerException("failed to interrupt job: " + name, e);
@@ -827,7 +531,7 @@ public class JobFacadeImpl implements JobFacade {
 			JobDetail job = sched.getJobDetail(jobKey(name));
 			if (job != null) {
 				JobDataMap data = job.getJobDataMap();
-				data.put(AbstractGenericJob.KEY_MAXRUNTIME, oTime);
+				data.put(Constants.KEY_MAXRUNTIME, oTime);
 				sched.addJob(job, true);
 			} else  {
 				logger.trace("no such job(" + name + ") to set lasting time");
@@ -840,9 +544,9 @@ public class JobFacadeImpl implements JobFacade {
 		}
 	}
 
-	public JobReceiver getJobReceiver(String name) {
+	/*public JobReceiver getJobReceiver(String name) {
 		return jobReceiverMap.get(name);
-	}
+	}*/
 	
 	public void triggerJobNondurably(JobDetail job, Trigger trigger) throws JobManagerException {
 		try {
@@ -960,7 +664,7 @@ public class JobFacadeImpl implements JobFacade {
 		return maxDataSize;
 	}
 
-	public void setJobHistoryLength(String name, int length)
+	/*public void setJobHistoryLength(String name, int length)
 			throws JobManagerException {
 		JobReceiverImpl receiver = (JobReceiverImpl) jobReceiverMap.get(name);
 		if (receiver != null) {
@@ -977,7 +681,7 @@ public class JobFacadeImpl implements JobFacade {
 		} else {
 			throw new JobManagerException("no such job exist (" + name + ")");
 		}
-	}
+	}*/
 
 	public JobClass[] findJobClassForJob(String jobName) {
 		Set<JobClass> jcs = new HashSet<JobClass>();

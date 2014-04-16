@@ -15,6 +15,11 @@
  */
 package org.wiperdog.jobmanager.internal;
 
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.JobKey.jobKey;
+import static org.quartz.TriggerBuilder.newTrigger;
+import static org.wiperdog.jobmanager.Constants.KEY_JOBRESULT;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -25,35 +30,25 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.quartz.DateBuilder;
+import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.JobKey;
 import org.quartz.JobListener;
 import org.quartz.ListenerManager;
 import org.quartz.Matcher;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
-import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.TriggerKey;
-import org.quartz.JobKey;
 import org.quartz.UnableToInterruptJobException;
 import org.quartz.impl.matchers.KeyMatcher;
 import org.wiperdog.jobmanager.Constants;
 import org.wiperdog.jobmanager.JobClass;
 import org.wiperdog.jobmanager.JobFacade;
-import org.wiperdog.jobmanager.JobReceiver;
-import org.wiperdog.jobmanager.JobResult.JOBSTATUS;
-import org.wiperdog.jobmanager.TriggerReceiver.TRIGGEREVENT;
-import org.apache.log4j.Logger;
-
-
-import static org.quartz.JobKey.*;
-import static org.quartz.JobBuilder.*;
-import static org.quartz.TriggerBuilder.*;
-import static org.wiperdog.jobmanager.Constants.KEY_JOBRESULT;
 
 /**
  * ジョブクラス実装
@@ -338,7 +333,7 @@ public class JobClassImpl implements JobClass {
 				vetoedQueue.offer(vk);
 				reasons.add(REASONKEY_CONCURRENCY);
 				// create result data here if not exist
-				JobResultImpl jresult = (JobResultImpl) datamap.get(KEY_JOBRESULT);
+				/*JobResultImpl jresult = (JobResultImpl) datamap.get(KEY_JOBRESULT);
 				if (jresult == null) {
 					jresult = new JobResultImpl(trigger.getJobKey().getName());
 				} else {
@@ -347,7 +342,7 @@ public class JobClassImpl implements JobClass {
 				}
 				datamap.put(KEY_JOBRESULT, jresult);
 				jresult.setPendedAt(vk.getVetoedDate());
-				jresult.putData(Constants.KEY_PENDINGJOBCLASS, name);
+				jresult.putData(Constants.KEY_PENDINGJOBCLASS, name);*/
 				logger.debug("ConcurrencyJobListener: numConcurrency exceeded for job: " + trigger.getJobKey().toString());
 				return;
 			}
@@ -479,7 +474,7 @@ public class JobClassImpl implements JobClass {
 	private void expiredWaitTime(VetoedTriggerKey vetoedkey) {
 		// wait time is over, giving up, throw it away.
 		logger.info("waitTime exceeded for job:" + vetoedkey.getKey().toString() + ", giving up");
-		JobReceiverImpl receiver = (JobReceiverImpl) jobFacade.getJobReceiver(vetoedkey.getKey().getName());
+		/*JobReceiverImpl receiver = (JobReceiverImpl) jobFacade.getJobReceiver(vetoedkey.getKey().getName());
 		if (receiver != null) {
 			receiver.putEvent(vetoedkey.getKey().getName(), TRIGGEREVENT.MISFIRED, new Date());
 			int ilast = receiver.resultCount() - 1;
@@ -487,19 +482,19 @@ public class JobClassImpl implements JobClass {
 				JobResultImpl result = (JobResultImpl) receiver.getJobResult(ilast);
 				result.setWaitexpiredAt(new Date());
 			}
-		}
+		}*/
 	}
 	
 	private void vetoedCancelled(VetoedTriggerKey vetoedkey) {
 		// wait time is over, giving up, throw it away.
 		logger.info("cancelled wainting job:" + vetoedkey.getKey().toString() + "");
-		JobReceiverImpl receiver = (JobReceiverImpl) jobFacade.getJobReceiver(vetoedkey.getKey().getName());
+		/*JobReceiverImpl receiver = (JobReceiverImpl) jobFacade.getJobReceiver(vetoedkey.getKey().getName());
 		receiver.putEvent(vetoedkey.getKey().getName(), TRIGGEREVENT.MISFIRED, new Date());
 		int ilast = receiver.resultCount() - 1;
 		if (ilast >= 0) {
 			JobResultImpl result = (JobResultImpl) receiver.getJobResult(ilast);
 			result.setWaitexpiredAt(new Date());
-		}
+		}*/
 	}
 	
 	public int getConcurrency() {

@@ -90,9 +90,9 @@ public interface JobFacade {
 	 * @param scriptPathAndArguments
 	 * @return
 	 * @throws JobManagerException 
-	 */
+	 *//*
 	JobDetail createJob(String name, String [] scriptPathAndArguments, boolean usePredefined) throws JobManagerException;
-	
+	*/
 	/**
 	 * createJob
 	 * ジョブの作成
@@ -103,7 +103,7 @@ public interface JobFacade {
 	 * @return
 	 * @throws JobManagerException 
 	 */
-	JobDetail createJob(String name, String [] scriptPathAndArguments, boolean useOut, boolean useErr, boolean usePredefined) throws JobManagerException;
+	//JobDetail createJob(String name, String [] scriptPathAndArguments, boolean useOut, boolean useErr, boolean usePredefined) throws JobManagerException;
 
 	/**
 	 * createJob
@@ -115,7 +115,7 @@ public interface JobFacade {
 	 * @return
 	 * @throws JobManagerException 
 	 */
-	JobDetail createJob(String name, String className, String methodSignature, Object [] args) throws JobManagerException;
+	//JobDetail createJob(String name, String className, String methodSignature, Object [] args) throws JobManagerException;
 
 	/**
 	 * createJob
@@ -127,7 +127,7 @@ public interface JobFacade {
 	 * @return
 	 * @throws JobManagerException 
 	 */
-	JobDetail createJob(String name, String [] filterspec, String methodSignature, Object [] args) throws JobManagerException;
+	//JobDetail createJob(String name, String [] filterspec, String methodSignature, Object [] args) throws JobManagerException;
 
 	/**
 	 * 
@@ -145,7 +145,7 @@ public interface JobFacade {
 	 * @return
 	 * @throws JobManagerException 
 	 */
-	public JobDetail createControlJob(String name, ControlJobType type, String [] args) throws JobManagerException;
+	/*public JobDetail createControlJob(String name, ControlJobType type, String [] args) throws JobManagerException;*/
 
 	/**
 	 * getJob
@@ -270,127 +270,128 @@ public interface JobFacade {
 	 * JobNetを作成
 	 * @param name
 	 * @return
-	 */
+	 *//*
 	JobNet createJobNet(String name);
 
-	/**
+	*//**
 	 * JobNet取得
 	 * @param name
 	 * @return
-	 */
+	 *//*
 	JobNet getJobNet(String name);
 
-	/**
+	*//**
 	 * JobNet内に 実行端末を作成
 	 * @param net
 	 * @param name
 	 * @param jobName
 	 * @return
-	 */
+	 *//*
 	Terminal createForceRunTerminal(JobNet net, String name, String jobName);
 	
-	/**
+	*//**
 	 * JobNet内に 実行端末を作成 ディレイ付き
 	 * @param net
 	 * @param name
 	 * @param jobName
 	 * @param interval
 	 * @return
-	 */
+	 *//*
 	Terminal createForceRunTerminal(JobNet net, String name, String jobName, long interval);
 	
-	/**
+	*//**
 	 * JobNet内に実行抑制端末を作成
 	 * @param net
 	 * @param name
 	 * @param jobName
 	 * @return
-	 */
+	 *//*
 	Terminal createProhibitTerminal(JobNet net, String name, String jobName);
 	
-	/**
+	*//**
 	 * JobNet内に実行抑制端末を作成 タイムアウト付き
 	 * @param net
 	 * @param name
 	 * @param jobName
 	 * @param interval
 	 * @return
-	 */
+	 *//*
 	Terminal createProhibitTerminal(JobNet net, String name, String jobName, long interval);
 
-	/**
+	*//**
 	 * オペレータ作成
 	 * @param net
 	 * @param name
 	 * @return
-	 */
+	 *//*
 	Operator createOrOperator(JobNet net, String name);
 	Operator createAndOperator(JobNet net, String name);
 	Operator createXorOperator(JobNet net, String name);
 	Operator createNotOperator(JobNet net, String name);
 	Operator createCounterOperator(JobNet net, String name, int count);
 	
-	/**
+	*//**
 	 * JobNetのノードを接続
 	 * @param net
 	 * @param upper
 	 * @param lower
 	 * @throws ClassCastException
 	 * @throws ConditionBoardException
-	 */
+	 *//*
+	
 	void connect(JobNet net, String upper, String lower) throws ClassCastException, ConditionBoardException;
 	
-	/**
+	*//**
 	 * JobNetのノード間の接続を切る
 	 * @param net
 	 * @param upper
 	 * @param lower
-	 */
+	 *//*
 	void disconnect(JobNet net, String upper, String lower);
 
-	/**
+	*//**
 	 * シグナル用擬似ジョブを作成
 	 * @param net
 	 * @param name
 	 * @return
-	 */
+	 *//*
 	Receiver createInterruptFollower(JobNet net, String name);
 	
-	/**
+	*//**
 	 * JobNetの擬似Jobにシグナル
 	 * @param net
 	 * @param portName
 	 * @param v
-	 */
+	 *//*
 	void signalNet(JobNet net, String portName, boolean v);
-
+*/
 	/**
 	 * JobNet名を列挙
 	 * @return
-	 */
+	 *//*
 	Set<String> keySetNet();
 	
-	/**
+	*//**
 	 * 全ノードのリストを取得
 	 * @return
-	 */
+	 *//*
 	List<Object> getNodeList();
 	
-	/**
+	*//**
 	 * JobNetのノードをすべて取得
 	 * @param netName
 	 * @return
-	 */
+	 *//*
 	List<Object> getNodeList(String netName);
 	
-	/**
+	*//**
 	 * JobNetのノードを取得
 	 * @param netName
 	 * @param objname
 	 * @return
-	 */
+	 *//*
 	Object getNode(String netName, String objname);
-
+*/
 	/**
 	 * Job名を列挙
 	 * @return
@@ -421,7 +422,7 @@ public interface JobFacade {
 	 * @param name
 	 * @return
 	 */
-	JobReceiver getJobReceiver(String name);
+	//JobReceiver getJobReceiver(String name);
 	
 	/**
 	 * スケジューラを一時停止
@@ -440,7 +441,7 @@ public interface JobFacade {
 	 * @param name
 	 * @return
 	 */
-	List<JobResult> getJobResult(String name);
+	/*List<JobResult> getJobResult(String name);*/
 
 	/**
 	 * JobKeyを生成
@@ -488,7 +489,7 @@ public interface JobFacade {
 	 * @param length
 	 * @throws JobManagerException
 	 */
-	void setJobHistoryLength(String name, int length) throws JobManagerException;
+//	void setJobHistoryLength(String name, int length) throws JobManagerException;
 
 	/**
 	 * 実行結果の履歴保持数を設定
@@ -496,7 +497,7 @@ public interface JobFacade {
 	 * @return
 	 * @throws JobManagerException
 	 */
-	int getJobHistoryLength(String name) throws JobManagerException;
+//	int getJobHistoryLength(String name) throws JobManagerException;
 	
 	/**
 	 * 実行中のJobを停止

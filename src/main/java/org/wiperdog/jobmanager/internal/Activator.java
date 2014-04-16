@@ -15,14 +15,10 @@
  */
 package org.wiperdog.jobmanager.internal;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Dictionary;
 import java.util.Hashtable;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
@@ -31,23 +27,13 @@ import org.osgi.service.cm.ConfigurationException;
 import org.osgi.service.cm.ManagedService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
-import org.quartz.JobDataMap;
-import org.quartz.JobDetail;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SchedulerFactory;
-import org.quartz.Trigger;
-import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.quartz.simpl.PropertySettingJobFactory;
-import org.wiperdog.jobmanager.JobClass;
 import org.wiperdog.jobmanager.JobFacade;
 import org.wiperdog.jobmanager.JobManagerException;
-import org.wiperdog.jobmanager.JobResult;
-import org.wiperdog.jobmanager.dsl.Parser;
-import org.xml.sax.SAXException;
-import org.apache.log4j.Logger;
-
 import org.wiperdog.rshell.api.RShellProvider;
 
 public class Activator implements BundleActivator {
@@ -84,7 +70,8 @@ public class Activator implements BundleActivator {
 	 * @author kurohara
 	 *
 	 */
-	private class GogoCommand {
+	
+	/*private class GogoCommand {
 		private void showJobDataMap(String indent, JobDataMap datamap) {
 			Set<Map.Entry<String, Object>> entries = datamap.entrySet();
 			for (Map.Entry<String, Object> entry : entries) {
@@ -99,10 +86,10 @@ public class Activator implements BundleActivator {
 			}
 		}
 		
-		/**
+		*//**
 		 * load command
 		 * @param args
-		 */
+		 *//*
 		public void load(String [] args) {
 			Parser parser = new Parser(jf, false);
 			if (args.length > 0) {
@@ -136,10 +123,10 @@ public class Activator implements BundleActivator {
 			}
 		}
 
-		/**
+		*//**
 		 * list command
 		 * @param args
-		 */
+		 *//*
 		public void list(String [] args) {
 			Set<String> keys = jf.keySetJob();
 			System.out.println("Job list - ");
@@ -194,7 +181,7 @@ public class Activator implements BundleActivator {
 			}
 		}
 	}
-
+*/
 	/**
 	 * CommanderJobにはCommanderServiceが必要
 	 * @author kurohara
@@ -204,7 +191,7 @@ public class Activator implements BundleActivator {
 
 		public Object addingService(ServiceReference reference) {
 			Object svc = context.getService(reference);
-			((JobFacadeImpl)jf).setCommander((RShellProvider) svc);
+			//((JobFacadeImpl)jf).setCommander((RShellProvider) svc);
 			return svc;
 		}
 
@@ -214,7 +201,7 @@ public class Activator implements BundleActivator {
 		public void removedService(ServiceReference reference, Object service) {
 		}
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void start(BundleContext context) throws Exception {
 		this.context = context;
@@ -227,8 +214,8 @@ public class Activator implements BundleActivator {
 		Dictionary props = new Hashtable();
 		props.put("osgi.command.scope", "scheduler");
 		props.put("osgi.command.function", new String [] {"load", "list"});
-		context.registerService(GogoCommand.class.getName(), new GogoCommand(), props);
 		
+		//context.registerService(GogoCommand.class.getName(), new GogoCommand(), props);		
 		// JobFacadeImplにCommanderServiceをセットするため。
 		ServiceTracker tracker = new ServiceTracker(context, RShellProvider.class.getName(), new CommanderServiceTrackerCustomizer());
 		tracker.open();
