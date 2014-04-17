@@ -17,13 +17,34 @@ package org.wiperdog.jobmanager;
 
 import org.quartz.JobDataMap;
 
+/**
+ * Interface for instance base job.
+ * @author kurohara
+ *
+ */
 public interface JobExecutable {
+	/**
+	 * 
+	 * @param params
+	 * @return
+	 */
+	Object execute(JobDataMap params) throws InterruptedException;
 	
-	Object execute(JobDataMap params) throws InterruptedException;	
-	
+	/**
+	 * get name used to uniquely recognize this job.
+	 * @return
+	 */
 	String getName();
 
+	/**
+	 * 
+	 * @return
+	 */
 	String getArgumentString();
 	
+	/**
+	 * stop execution immediately.
+	 * @param thread
+	 */
 	void stop(Thread thread);
 }

@@ -16,12 +16,6 @@
 package org.wiperdog.jobmanager;
 
 public class Constants {
-	public static final String KEY_JOBEXECUTIONFAILED = "executionfailed";
-	public static final String KEY_MAXRUNTIME = "MAXRUNTIME";
-	private static final String EMPTYGROUP = "__EMPTYGROUP";
-	public static final int DEF_MAX_DATA_SIZE = 4096;
-	public static final int DEF_MAX_HISTORYDEPTH = 5;
-	
 	public static final String KEY_OPTION = "option";
 	public static final String KEY_PROHIBIT = "prohibit";
 	public static final String KEY_INSTANCENAME = "instancename";

@@ -15,17 +15,11 @@
  */
 package org.wiperdog.jobmanager.internal;
 
-import static org.quartz.JobBuilder.newJob;
-import static org.quartz.TriggerBuilder.newTrigger;
-import static org.wiperdog.jobmanager.Constants.KEY_JOBRESULT;
-import static org.wiperdog.jobmanager.Constants.KEY_MAXRUNTIME;
-
 import java.util.Date;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.quartz.DateBuilder;
-import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -35,7 +29,15 @@ import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.UnableToInterruptJobException;
+import org.quartz.DateBuilder.IntervalUnit;
 import org.wiperdog.jobmanager.Constants;
+import org.wiperdog.jobmanager.JobResult;
+import org.wiperdog.jobmanager.Node;
+
+
+import static org.quartz.JobBuilder.*;
+import static org.quartz.TriggerBuilder.newTrigger;
+import static org.wiperdog.jobmanager.Constants.*;
 
 
 /**
@@ -44,12 +46,14 @@ import org.wiperdog.jobmanager.Constants;
  *
  */
 public abstract class AbstractGenericJob implements InterruptableJob {
-	
+	public static final String KEY_MAXRUNTIME = "MAXRUNTIME";
+	private static final String EMPTYGROUP = "__EMPTYGROUP";
+	public static final int DEF_MAX_HISTORYDEPTH = 5;
 	protected Thread me;
 	private boolean bRun = true;	
 	protected String lastMsg = "";
 	protected Logger logger = Logger.getLogger(Activator.LOGGERNAME);
-
+	
 	protected abstract Object doJob(JobExecutionContext context) throws Throwable;
 	
 	protected final void setFailed(JobExecutionContext context) {
@@ -60,7 +64,7 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 	
 	protected final void setFailed(JobDataMap data) {
 		logger.trace("AbstractGenericJob.setFailed(" + data.toString() + ")");
-		data.put(Constants.KEY_JOBEXECUTIONFAILED, Boolean.valueOf(true));
+		data.put(Node.KEY_JOBEXECUTIONFAILED, Boolean.valueOf(true));
 	}
 	
 	/**
@@ -152,7 +156,6 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 	
 	public final void execute(JobExecutionContext context)
 			throws JobExecutionException {
-		System.out.println("+++++++++++++++++++AbstractGenericJob.execute(" + context.toString() + ")");
 		logger.trace("AbstractGenericJob.execute(" + context.toString() + ")");
 		me = Thread.currentThread();
 		JobDataMap data = context.getMergedJobDataMap();
@@ -174,23 +177,23 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 		try {
 			JobDetail suicideJob = setSuicide(context);
 			JobDataMap datamap = context.getJobDetail().getJobDataMap();
-			/*JobResultImpl jresult = (JobResultImpl) datamap.get(KEY_JOBRESULT);
+			JobResultImpl jresult = (JobResultImpl) datamap.get(KEY_JOBRESULT);
 			if (jresult == null) {
 				jresult = new JobResultImpl(trigger.getJobKey().getName());
 			} else {
 				jresult = new JobResultImpl(jresult); 
-			}*/
-			datamap.put(KEY_JOBRESULT, null/*jresult*/);
-			//jresult.setStartedAt(new Date());
+			}
+			datamap.put(KEY_JOBRESULT, jresult);
+			jresult.setStartedAt(new Date());
 			Object ro = null;
 			try {
 				ro = doJob(context);
 				context.setResult(ro);
-				/*jresult.setResult(ro);
+				jresult.setResult(ro);
 				jresult.setMessage(lastMsg);
-				jresult.setEndedAt(new Date());*/
+				jresult.setEndedAt(new Date());
 			} catch (InterruptedException e) {
-				//jresult.setInterruptedAt(new Date());
+				jresult.setInterruptedAt(new Date());
 			} catch (Throwable t) {
 				logger.debug("doJob() failed", t);
 			} finally {
