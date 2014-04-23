@@ -1,25 +1,15 @@
-/*
- *  Copyright 2013 Insight technology,inc. All rights reserved.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 package org.wiperdog.jobmanager.internal;
 
-import java.util.Date;
+import static org.quartz.JobBuilder.newJob;
+import static org.quartz.TriggerBuilder.newTrigger;
+import static org.wiperdog.jobmanager.Constants.KEY_JOBRESULT;
+import static org.wiperdog.jobmanager.Constants.KEY_MAXRUNTIME;
+
 import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.quartz.DateBuilder;
+import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.InterruptableJob;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -29,31 +19,20 @@ import org.quartz.JobKey;
 import org.quartz.SchedulerException;
 import org.quartz.Trigger;
 import org.quartz.UnableToInterruptJobException;
-import org.quartz.DateBuilder.IntervalUnit;
 import org.wiperdog.jobmanager.Constants;
-import org.wiperdog.jobmanager.JobResult;
-import org.wiperdog.jobmanager.Node;
-
-
-import static org.quartz.JobBuilder.*;
-import static org.quartz.TriggerBuilder.newTrigger;
-import static org.wiperdog.jobmanager.Constants.*;
 
 
 /**
  * 
- * @author kurohara
+ * Implementation of Quartz InterruptableJob
  *
  */
 public abstract class AbstractGenericJob implements InterruptableJob {
-	public static final String KEY_MAXRUNTIME = "MAXRUNTIME";
-	private static final String EMPTYGROUP = "__EMPTYGROUP";
-	public static final int DEF_MAX_HISTORYDEPTH = 5;
-	protected Thread me;
-	private boolean bRun = true;	
+	
+	protected Thread me;	
 	protected String lastMsg = "";
 	protected Logger logger = Logger.getLogger(Activator.LOGGERNAME);
-	
+
 	protected abstract Object doJob(JobExecutionContext context) throws Throwable;
 	
 	protected final void setFailed(JobExecutionContext context) {
@@ -64,7 +43,7 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 	
 	protected final void setFailed(JobDataMap data) {
 		logger.trace("AbstractGenericJob.setFailed(" + data.toString() + ")");
-		data.put(Node.KEY_JOBEXECUTIONFAILED, Boolean.valueOf(true));
+		data.put(Constants.KEY_JOBEXECUTIONFAILED, Boolean.valueOf(true));
 	}
 	
 	/**
@@ -73,8 +52,6 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 	 * for individual running time setting.
 	 * same as "RuntimeLimitterJob" in JobClassImpl.
 	 * 
-	 * @author kurohara
-	 *
 	 */
 	public static final class SuicideJob implements InterruptableJob {
 		private Logger logger = Logger.getLogger(Activator.LOGGERNAME);
@@ -92,11 +69,9 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 			try {
 				JobDetail targetJob = context.getScheduler().getJobDetail(jobkey);
 				if (targetJob == null) {
-					// no such job now
 					logger.info("The job going to interrupt is already disappeared");
 					return ;
 				}
-				// do interrupt
 				context.getScheduler().interrupt(jobkey);
 			} catch (UnableToInterruptJobException e) {
 				logger.debug("	error on interrupt:", e);
@@ -115,7 +90,6 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 	 * @param context
 	 */
 	private JobDetail setSuicide(JobExecutionContext context) {
-		// check if timed suicide is required.
 		JobDataMap data = context.getJobDetail().getJobDataMap();
 		Long maxRunTime = (Long) data.get(KEY_MAXRUNTIME);
 		logger.trace("setting suicide job for :" + context.getJobDetail().getKey().getName() + ", time: " + maxRunTime);
@@ -177,23 +151,12 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 		try {
 			JobDetail suicideJob = setSuicide(context);
 			JobDataMap datamap = context.getJobDetail().getJobDataMap();
-			JobResultImpl jresult = (JobResultImpl) datamap.get(KEY_JOBRESULT);
-			if (jresult == null) {
-				jresult = new JobResultImpl(trigger.getJobKey().getName());
-			} else {
-				jresult = new JobResultImpl(jresult); 
-			}
-			datamap.put(KEY_JOBRESULT, jresult);
-			jresult.setStartedAt(new Date());
+			datamap.put(KEY_JOBRESULT, null);
 			Object ro = null;
 			try {
 				ro = doJob(context);
 				context.setResult(ro);
-				jresult.setResult(ro);
-				jresult.setMessage(lastMsg);
-				jresult.setEndedAt(new Date());
-			} catch (InterruptedException e) {
-				jresult.setInterruptedAt(new Date());
+			} catch (InterruptedException e) {				
 			} catch (Throwable t) {
 				logger.debug("doJob() failed", t);
 			} finally {
@@ -211,7 +174,6 @@ public abstract class AbstractGenericJob implements InterruptableJob {
 	
 	public void interrupt() throws UnableToInterruptJobException {
 		logger.trace("AbstractGenericJob.interrupt()");
-		bRun = false;
 		if (me != null) {
 			me.interrupt();
 		}

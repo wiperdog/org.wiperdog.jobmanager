@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1398246095412
+Build-Jdk: 1.6.0_45
+Built-By: nguyenvannghia
+Bundle-Description: wiperdog job manager
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-ManifestVersion: 2
+Bundle-Name: org.wiperdog.jobmanager
+Bundle-SymbolicName: org.wiperdog.jobmanager
+Bundle-Version: 0.2.3.SNAPSHOT
+Created-By: Apache Maven Bundle Plugin
+Export-Package: org.wiperdog.jobmanager;uses:="org.quartz";version="0.2.
+ 3.SNAPSHOT"
+Import-Package: org.apache.log4j,org.osgi.framework;version="[1.3,2)",or
+ g.osgi.util.tracker;version="[1.3,2)",org.quartz,org.quartz.impl,org.qu
+ artz.impl.matchers,org.quartz.simpl,org.quartz.spi,org.quartz.utils,org
+ .wiperdog.jobmanager;version="[0.2,1)",org.wiperdog.rshell.api;version=
+ "[0.1,1)"
+Tool: Bnd-1.50.0
