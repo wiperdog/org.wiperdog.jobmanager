@@ -16,6 +16,9 @@ public class ObjectJob extends AbstractGenericJob {
 		return (JobExecutable) data.get(Constants.KEY_OBJECT);
 	}
 	
+	/* (non-Javadoc)
+	 * @see org.wiperdog.jobmanager.internal.AbstractGenericJob#doJob(org.quartz.JobExecutionContext)
+	 */
 	@Override
 	protected Object doJob(JobExecutionContext context) throws Throwable {
 		JobDataMap data = context.getMergedJobDataMap();
@@ -45,6 +48,9 @@ public class ObjectJob extends AbstractGenericJob {
 		return value;
 	}
 
+	/* (non-Javadoc)
+	 * @see org.wiperdog.jobmanager.internal.AbstractGenericJob#interrupt()
+	 */
 	@Override
 	public void interrupt() throws UnableToInterruptJobException {
 		if (data != null) {

@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1398246095412
+Bnd-LastModified: 1398250470092
 Build-Jdk: 1.6.0_45
 Built-By: nguyenvannghia
 Bundle-Description: wiperdog job manager

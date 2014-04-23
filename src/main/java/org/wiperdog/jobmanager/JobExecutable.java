@@ -8,20 +8,20 @@ import org.quartz.*;
 public interface JobExecutable {
 
 	/**
-	 * 
+	 * Executing the job
 	 * @param params
 	 */
 	Object execute(JobDataMap params)throws InterruptedException;
 
 	/**
-	 * get name used to uniquely recognize this job.
+	 * Get name used to uniquely recognize this job.
 	 */
 	String getName();
 
 	String getArgumentString();
 
 	/**
-	 * stop execution immediately.
+	 * Stop execution immediately. This should be invoked by InterruptableJob.interrupt() method.  
 	 */
 	void stop(Thread t);
 }
