@@ -48,11 +48,7 @@ public interface JobFacade {
 	JobDetail createJob(JobExecutable executable) throws JobManagerException;
 
 
-	/**
-	 * Creating a trigger.
-	 * @param name The name of the trigger.
-	 */
-	Trigger createTrigger(String name) throws JobManagerException;
+	
 
 	/**
 	 * Get created job by job name in job instance map
@@ -107,11 +103,17 @@ public interface JobFacade {
 	void revokeJobClass(String jobName) throws JobManagerException;
 
 	/**
+	 * Creating a trigger.
+	 * @param name The name of the trigger.
+	 */
+	Trigger createTrigger(String name) throws JobManagerException;
+
+	/**
 	 * Create Trigger with delay time
 	 * @param name Name of the trigger
 	 * @param delay The delay time in millisecond
 	 */
-	Trigger createTrigger(String name, int delay) throws JobManagerException;
+	Trigger createTrigger(String name, long delay) throws JobManagerException;
 
 	/**
 	 * Create trigger with delay time and loop interval
@@ -119,7 +121,7 @@ public interface JobFacade {
 	 * @param delay The delay time
 	 * @param interval Loop interval
 	 */
-	Trigger createTrigger(String name, int delay, long interval) throws JobManagerException;
+	Trigger createTrigger(String name, long delay, long interval) throws JobManagerException;
 
 	/**
 	 * Create trigger to start at a specified time in the future
@@ -134,7 +136,8 @@ public interface JobFacade {
 	 * @param crondef A String represent for cron-tab configuration.
 	 */
 	Trigger createTrigger(String name, String crondef) throws JobManagerException;
-
+	
+	
 	/**
 	 * Creating job.
 	 * @param jobName The name of job will be created.

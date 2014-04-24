@@ -18,6 +18,9 @@ public interface JobExecutable {
 	 */
 	String getName();
 
+	/**
+	 * @return
+	 */
 	String getArgumentString();
 
 	/**

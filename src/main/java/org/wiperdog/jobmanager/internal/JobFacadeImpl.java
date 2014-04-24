@@ -5,7 +5,6 @@ import static org.quartz.JobBuilder.newJob;
 import static org.quartz.JobKey.jobKey;
 import static org.quartz.TriggerBuilder.newTrigger;
 
-import java.text.ParseException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +14,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.quartz.DateBuilder;
+import org.quartz.DateBuilder.IntervalUnit;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -24,12 +24,11 @@ import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
+import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.TriggerBuilder;
 import org.quartz.TriggerKey;
 import org.quartz.TriggerListener;
 import org.quartz.UnableToInterruptJobException;
-import org.quartz.DateBuilder.IntervalUnit;
-import org.quartz.Trigger.CompletedExecutionInstruction;
 import org.quartz.impl.matchers.EverythingMatcher;
 import org.wiperdog.jobmanager.Constants;
 import org.wiperdog.jobmanager.JobClass;
@@ -209,6 +208,7 @@ public class JobFacadeImpl implements JobFacade {
 	 * @see org.wiperdog.jobmanager.JobFacade#createJob(org.wiperdog.jobmanager.JobExecutable)
 	 */
 	public JobDetail createJob(JobExecutable executable) throws JobManagerException {
+		logger.info("--------------------- Start creating job " + executable.getName());		
 		String name = executable.getName();
 		JobDataMap dataMap = new JobDataMap();
 		dataMap.put(Constants.KEY_TYPE, Constants.JOBTYPE_OBJECT);
@@ -416,7 +416,7 @@ public class JobFacadeImpl implements JobFacade {
 	/* (non-Javadoc)
 	 * @see org.wiperdog.jobmanager.JobFacade#createTrigger(java.lang.String, int)
 	 */
-	public Trigger createTrigger(String name, int delay) {
+	public Trigger createTrigger(String name, long delay) {
 		return newTrigger()
 				.withIdentity(autoname(name))
 				.startAt(DateBuilder.futureDate((int) delay, IntervalUnit.MILLISECOND))
@@ -426,7 +426,7 @@ public class JobFacadeImpl implements JobFacade {
 	/* (non-Javadoc)
 	 * @see org.wiperdog.jobmanager.JobFacade#createTrigger(java.lang.String, int, long)
 	 */
-	public Trigger createTrigger(String name, int delay, long interval) {
+	public Trigger createTrigger(String name, long delay, long interval) {
 		logger.trace("JobFacadeImpl.createTrigger(" + name + ", " + delay
 				+ ", " + interval + ")");
 		Date startTime = new Date(System.currentTimeMillis() + delay);
@@ -453,7 +453,7 @@ public class JobFacadeImpl implements JobFacade {
 						)
 				.withDescription(crondef)
 				.build();
-		} catch (ParseException e) {
+		} catch (Exception e) {
 			logger.info("Failed to create cron trigger, bad format:" + name + ", " + crondef, e);
 			throw new JobManagerException("Failed to create cron trigger, bad format:" + name + ", " + crondef, e);
 		}
