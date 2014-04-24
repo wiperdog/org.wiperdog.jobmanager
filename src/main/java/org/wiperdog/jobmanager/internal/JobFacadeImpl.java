@@ -110,6 +110,25 @@ public class JobFacadeImpl implements JobFacade {
 	}
 	
 	/* (non-Javadoc)
+	 * @see org.wiperdog.jobmanager.JobFacade#createJobClass(java.lang.String)
+	 */
+	public JobClass createJobClass(String jobClassName)  throws JobManagerException{
+		logger.trace("JobFacadeImpl.createJobClass(" + jobClassName + ")");
+		try {
+			JobClassImpl jc = null;
+			jc = jobClassMap.get(jobClassName);
+			if (jc == null) {
+				jc = new JobClassImpl(sched, jobClassName);
+				jobClassMap.put(jobClassName, jc);
+			}
+			return jc;
+		} catch (SchedulerException e) {
+			logger.info("failed to create JobClass:" + jobClassName, e);
+			throw new JobManagerException("failed to create JobClass:" + jobClassName, e);
+		}
+	}
+	
+	/* (non-Javadoc)
 	 * @see org.wiperdog.jobmanager.JobFacade#createJobClass(java.lang.String, int, long, long)
 	 */
 	public JobClass createJobClass(String jobClassName, 
@@ -123,7 +142,10 @@ public class JobFacadeImpl implements JobFacade {
 			if (jc == null) {
 				jc = new JobClassImpl(sched, jobClassName);
 				jobClassMap.put(jobClassName, jc);
-			}
+			}			
+			jc.setConcurrency(concurrency);
+			jc.setMaxWaitTime(maxWaitTime);
+			jc.setMaxRunTime(maxRunTime);
 			return jc;
 		} catch (SchedulerException e) {
 			logger.info("failed to create JobClass:" + jobClassName, e);
@@ -308,9 +330,9 @@ public class JobFacadeImpl implements JobFacade {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.wiperdog.jobmanager.JobFacade#pauseSchedule()
+	 * @see org.wiperdog.jobmanager.JobFacade#pause()
 	 */
-	public void pauseSchedule()throws JobManagerException {
+	public void pause()throws JobManagerException {
 		try {
 			sched.standby();
 		} catch (SchedulerException e) { 
@@ -321,9 +343,9 @@ public class JobFacadeImpl implements JobFacade {
 	}
 
 	/* (non-Javadoc)
-	 * @see org.wiperdog.jobmanager.JobFacade#resumSchedule()
+	 * @see org.wiperdog.jobmanager.JobFacade#resume()
 	 */
-	public void resumSchedule() throws JobManagerException {
+	public void resume() throws JobManagerException {
 		try {
 			sched.start();
 		} catch (SchedulerException e) {
@@ -458,5 +480,18 @@ public class JobFacadeImpl implements JobFacade {
 			throw new JobManagerException("Failed to create cron trigger, bad format:" + name + ", " + crondef, e);
 		}
 	}
+	
+	/* (non-Javadoc)
+	 * @see org.wiperdog.jobmanager.JobFacade#jobKeyForName(java.lang.String)
+	 */
+	public JobKey jobKeyForName(String name) {
+		return jobKey(name);
+	}
 
+	/* (non-Javadoc)
+	 * @see org.wiperdog.jobmanager.JobFacade#getSchedulerObject()
+	 */
+	public Object getSchedulerObject() {
+		return sched;
+	}
 }

@@ -5,6 +5,7 @@ import java.util.Date;
 import org.quartz.Job;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.Trigger;
 
 /**
@@ -20,6 +21,12 @@ public interface JobFacade {
 	 * @param maxRunTime The longest running time that a job in this job class can be run. When a job start running and the running time is over this number, the job will be interrupted.
 	 */
 	JobClass createJobClass(String jobClassName, int concurrency, long maxWaitTime, long maxRunTime) throws JobManagerException;
+
+	/**
+	 * Create the job class with specific name.
+	 * @param jobClassName Name of the job class
+	 */
+	JobClass createJobClass(String jobClassName) throws JobManagerException;
 
 	/**
 	 * Assign a job to an existing job class.
@@ -71,12 +78,12 @@ public interface JobFacade {
 	/**
 	 * Pause the Quartz scheduler.
 	 */
-	void pauseSchedule() throws JobManagerException;
+	void pause() throws JobManagerException;
 
 	/**
 	 * Resume the Quartz scheduler.
 	 */
-	void resumSchedule() throws JobManagerException;
+	void resume() throws JobManagerException;
 
 	/**
 	 * Interrupt a job which was scheduled.
@@ -165,4 +172,16 @@ public interface JobFacade {
 	 */
 	void scheduleJob(JobDetail job, Trigger trigger) throws JobManagerException;
 
+	/**
+	 * Create JobKey from job name.
+	 * @param name Name of job
+	 * @return JobKey
+	 */
+	JobKey jobKeyForName(String name);
+
+	/**
+	 * Get the scheduler object which is used internally.
+	 * @return Object scheduler object
+	 */
+	Object getSchedulerObject();
 }

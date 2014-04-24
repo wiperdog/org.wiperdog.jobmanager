@@ -36,14 +36,13 @@ import org.wiperdog.jobmanager.JobFacade;
 
 public class JobClassImpl implements JobClass {
 
-	private String name;	
-	private int concurrency;
+	private String name;
+	private int numConcurrency;
 	private long maxRunTime;
 	private long maxWaitTime;
 	private List<JobKey> assignedList = new ArrayList<JobKey>();
 		
 	private Set<JobKey> running = new HashSet<JobKey>();
-	private int numConcurrency;
 	private BlockingQueue<VetoedTriggerKey> vetoedQueue = new LinkedBlockingQueue<VetoedTriggerKey>();
 	private final static String REASONKEY_CONCURRENCY = JobClassImpl.class.getName();	
 	public static final String SUFFIX_CANCELJOB = "_cancel";
@@ -59,7 +58,7 @@ public class JobClassImpl implements JobClass {
 	public JobClassImpl(Scheduler sched, String name) throws SchedulerException {		
 		this.name = name;
 		this.scheduler = sched;
-		// default concurrency is 1
+		// default numConcurrency is 1
 		this.numConcurrency = 1;
 		// default runtime = near forever
 		this.maxRunTime = Long.MAX_VALUE;
@@ -96,7 +95,7 @@ public class JobClassImpl implements JobClass {
 	/* (non-Javadoc)
 	 * @see org.wiperdog.jobmanager.JobClass#getJobClassName()
 	 */
-	public String getJobClassName() {
+	public String getName() {
 		return this.name;
 	}
 	
@@ -104,14 +103,14 @@ public class JobClassImpl implements JobClass {
 	 * @see org.wiperdog.jobmanager.JobClass#getConcurrency()
 	 */
 	public int getConcurrency() {
-		return this.concurrency;
+		return this.numConcurrency;
 	}
 	
 	/* (non-Javadoc)
 	 * @see org.wiperdog.jobmanager.JobClass#setConcurrency(int)
 	 */
 	public void setConcurrency(int concurrency) {
-		this.concurrency = concurrency;
+		this.numConcurrency = concurrency;
 	}
 
 	/* (non-Javadoc)
@@ -148,7 +147,14 @@ public class JobClassImpl implements JobClass {
 	public List<JobKey> getAssignedList() {
 		return assignedList;
 	}
-
+	
+	/* (non-Javadoc)
+	 * @see org.wiperdog.jobmanager.JobClass#getCurrentRunningCount()
+	 */
+	public int getCurrentRunningCount() {
+		return running.size();
+	}
+	
 	/**
 	 * Add it to the Job class.
 	 * @param key Key job
@@ -182,7 +188,7 @@ public class JobClassImpl implements JobClass {
 	/**
 	 * Interrupt a job when executed
 	 */
-	public class RuntimeLimitterJob  implements InterruptableJob {
+	public static final class RuntimeLimitterJob implements InterruptableJob {
 		private Logger logger = Logger.getLogger(Activator.LOGGERNAME);
 		public static final String KEY_JOBKEY = "jobkey";
 		

@@ -13,7 +13,7 @@ public interface JobClass {
 	 * Get the job class name.
 	 * @return jobClassName represent for this job class name
 	 */
-	String getJobClassName();
+	String getName();
 
 	/**
 	 * Get the number of job concurrency applied for this job class.
@@ -60,6 +60,11 @@ public interface JobClass {
 	 */
 	List<JobKey> getAssignedList();
 
+	/**
+	 * Get count of jobs which has been asigned to this job class and is running.
+	 * @return count of jobs
+	 */
+	int getCurrentRunningCount();
 
 	/**
 	 * Add/assign a job to this job class.
