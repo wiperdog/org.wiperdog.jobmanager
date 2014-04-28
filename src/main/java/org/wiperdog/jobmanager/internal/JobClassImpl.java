@@ -257,11 +257,11 @@ public class JobClassImpl implements JobClass {
 				logger.info("insert 'RUNTIMEOVER kill' job");
 				// schedule runtime over cancelling job here.
 				JobDetail cancelJob = newJob(RuntimeLimitterJob.class)
-					    .withIdentity(key.getName() + SUFFIX_CANCELJOB, key.getGroup() + SUFFIX_CANCELJOB)
+					    .withIdentity(key.getName() + SUFFIX_CANCELJOB)
 					    .build();
 				cancelJob.getJobDataMap().put(RuntimeLimitterJob.KEY_JOBKEY, key);
 				Trigger cancelTrigger = newTrigger()
-					    .withIdentity(key.getName() + SUFFIX_CANCELJOB, key.getGroup() + SUFFIX_CANCELJOB)
+					    .withIdentity(key.getName() + SUFFIX_CANCELJOB)
 					    .startAt( DateBuilder.futureDate((int) maxRunTime, IntervalUnit.MILLISECOND) )
 					    .forJob(cancelJob)
 					    .build();
@@ -295,7 +295,7 @@ public class JobClassImpl implements JobClass {
 
 			try {
 				// Delete the RuntimeLimitter job which was scheduled in method jobTobeExecuted()
-				sched.deleteJob(jobKey(context.getJobDetail().getKey().getName() + SUFFIX_CANCELJOB, context.getJobDetail().getKey().getGroup() + SUFFIX_CANCELJOB));
+				sched.deleteJob(jobKey(context.getJobDetail().getKey().getName() + SUFFIX_CANCELJOB));
 			} catch (SchedulerException e) {
 				logger.error("Failed to delete RuntimeLimitter job for ("+context.getJobDetail().getKey().getName() + "), may already removed. Detail as: " 
 							+ e.getMessage());
