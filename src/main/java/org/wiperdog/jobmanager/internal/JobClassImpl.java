@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -30,6 +31,8 @@ import org.quartz.Trigger;
 import org.quartz.TriggerKey;
 import org.quartz.UnableToInterruptJobException;
 import org.quartz.impl.matchers.KeyMatcher;
+import org.quartz.impl.StdSchedulerFactory;
+
 import org.wiperdog.jobmanager.Constants;
 import org.wiperdog.jobmanager.JobClass;
 import org.wiperdog.jobmanager.JobFacade;
@@ -52,6 +55,7 @@ public class JobClassImpl implements JobClass {
 	private static final Matcher<JobKey> NULLJOBMATCHER = KeyMatcher.keyEquals(new JobKey(NULLNAME, NULLGROUP));
 	
 	private final Scheduler scheduler;
+	private static Scheduler cancelJobScheduler;
 	
 	private Logger logger = Logger.getLogger(JobClassImpl.class);
 
@@ -66,6 +70,15 @@ public class JobClassImpl implements JobClass {
 		this.maxWaitTime = Long.MAX_VALUE;
 		ListenerManager lm = sched.getListenerManager();
 		lm.addJobListener(new JobClassJobListener(), NULLJOBMATCHER);
+		
+		//Init cancel scheduler
+		if (cancelJobScheduler == null) {
+			cancelJobScheduler = startCancelScheduler();
+		}
+		// Start cancel scheduler
+		if (!cancelJobScheduler.isStarted() ) {
+			cancelJobScheduler.start();
+		}
 	}
 	
 	public JobClassImpl(JobClassImpl src) throws SchedulerException {
@@ -80,8 +93,32 @@ public class JobClassImpl implements JobClass {
 		ListenerManager lm = scheduler.getListenerManager();
 		lm.removeJobListener(name);
 		lm.addJobListener(new JobClassJobListener(), NULLJOBMATCHER);
+		
+		//Init cancel scheduler
+		if (cancelJobScheduler == null) {
+			cancelJobScheduler = startCancelScheduler();
+		}
+		// Start cancel scheduler
+		if (!cancelJobScheduler.isStarted() ) {
+			cancelJobScheduler.start();
+		}
 	}
-
+	
+	private static Scheduler startCancelScheduler()  throws SchedulerException{
+		StdSchedulerFactory stdScheFac = new StdSchedulerFactory();
+		Properties props = new Properties();
+ 		props.setProperty(StdSchedulerFactory.PROP_THREAD_POOL_CLASS,
+ 				"org.quartz.simpl.SimpleThreadPool");
+ 		props.put("org.quartz.threadPool.threadCount", "20");
+ 		props.put("org.quartz.scheduler.instanceId","CancelJobScheduler");
+ 		props.put("org.quartz.scheduler.instanceName","CancelJobScheduler");
+ 		props.put("org.quartz.scheduler.skipUpdateCheck","true");
+ 	    props.put("org.quartz.threadPool.threadPriority","5");
+ 		props.put("org.quartz.threadPool.threadsInheritContextClassLoaderOfInitializingThread","true");
+ 		stdScheFac.initialize(props);
+ 		return stdScheFac.getScheduler();
+	}
+	
 	public void close() {
 		ListenerManager lm;
 		try {
@@ -191,6 +228,7 @@ public class JobClassImpl implements JobClass {
 	public static final class RuntimeLimitterJob implements InterruptableJob {
 		private Logger logger = Logger.getLogger(Activator.LOGGERNAME);
 		public static final String KEY_JOBKEY = "jobkey";
+		public static final String JOB_SCHEDULER = "jobscheduler";
 		
 		public RuntimeLimitterJob() {
 			logger.trace("RuntimeLimitterJob.RuntimeLimitterJob()");
@@ -201,8 +239,9 @@ public class JobClassImpl implements JobClass {
 			logger.trace("RuntimeLimitterJob.execute()");
 			JobKey jobkey = (JobKey) context.getMergedJobDataMap().get(KEY_JOBKEY);
 			logger.debug("interrupting job(" + jobkey.getName() + ")");
+			Scheduler jobScheduler = (Scheduler) context.getMergedJobDataMap().get(JOB_SCHEDULER);
 			try {
-				context.getScheduler().interrupt(jobkey);
+				jobScheduler.interrupt(jobkey);
 			} catch (UnableToInterruptJobException e) {
 				logger.debug("	error on interrupt:", e);
 			}
@@ -257,16 +296,17 @@ public class JobClassImpl implements JobClass {
 				logger.info("insert 'RUNTIMEOVER kill' job");
 				// schedule runtime over cancelling job here.
 				JobDetail cancelJob = newJob(RuntimeLimitterJob.class)
-					    .withIdentity(key.getName() + SUFFIX_CANCELJOB)
+					    .withIdentity(key.getName() + SUFFIX_CANCELJOB, key.getGroup() + SUFFIX_CANCELJOB)
 					    .build();
 				cancelJob.getJobDataMap().put(RuntimeLimitterJob.KEY_JOBKEY, key);
+				cancelJob.getJobDataMap().put(RuntimeLimitterJob.JOB_SCHEDULER, context.getScheduler());
 				Trigger cancelTrigger = newTrigger()
-					    .withIdentity(key.getName() + SUFFIX_CANCELJOB)
+					    .withIdentity(key.getName() + SUFFIX_CANCELJOB, key.getGroup() + SUFFIX_CANCELJOB)
 					    .startAt( DateBuilder.futureDate((int) maxRunTime, IntervalUnit.MILLISECOND) )
 					    .forJob(cancelJob)
 					    .build();
 				try {
-					context.getScheduler().scheduleJob(cancelJob, cancelTrigger);
+					cancelJobScheduler.scheduleJob(cancelJob, cancelTrigger);
 				} catch (SchedulerException e) {
 					logger.info("failed to insert 'RUNTIMEOVER kill' job");
 				}
@@ -295,7 +335,7 @@ public class JobClassImpl implements JobClass {
 
 			try {
 				// Delete the RuntimeLimitter job which was scheduled in method jobTobeExecuted()
-				sched.deleteJob(jobKey(context.getJobDetail().getKey().getName() + SUFFIX_CANCELJOB));
+				cancelJobScheduler.deleteJob(jobKey(context.getJobDetail().getKey().getName() + SUFFIX_CANCELJOB, context.getJobDetail().getKey().getGroup() + SUFFIX_CANCELJOB));
 			} catch (SchedulerException e) {
 				logger.error("Failed to delete RuntimeLimitter job for ("+context.getJobDetail().getKey().getName() + "), may already removed. Detail as: " 
 							+ e.getMessage());
