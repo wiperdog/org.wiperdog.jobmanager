@@ -1,543 +1,187 @@
-/*
- *  Copyright 2013 Insight technology,inc. All rights reserved.
- *
- *  Licensed under the Apache License, Version 2.0 (the "License");
- *  you may not use this file except in compliance with the License.
- *  You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- *  Unless required by applicable law or agreed to in writing, software
- *  distributed under the License is distributed on an "AS IS" BASIS,
- *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  See the License for the specific language governing permissions and
- *  limitations under the License.
- */
 package org.wiperdog.jobmanager;
 
 import java.util.Date;
-import java.util.List;
-import java.util.Set;
 
+import org.quartz.Job;
+import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Trigger;
-import org.quartz.TriggerKey;
 
 /**
- * 
- * @author kurohara
- *
+ * Facade class of Job Manager bundle. This help to perform main function of the package.
  */
 public interface JobFacade {
 
-	public enum ControlJobType {
-		TERMINATEJOB
-	}
-	
 	/**
-	 * createJobClass
-	 * Jobクラスを作成して返却する。
-	 * @param name
-	 * @return
-	 * @throws JobManagerException 
+	 * Create the job class with specific name, max wait time, max runtime, max concurrency.
+	 * @param jobClassName Name of the job class
+	 * @param concurrency number of job can execute concurently
+	 * @param maxWaitTime The maximum waiting time of a job in this job class. When waiting time reach this number, the job in this job class will be interrupted.
+	 * @param maxRunTime The longest running time that a job in this job class can be run. When a job start running and the running time is over this number, the job will be interrupted.
 	 */
-	JobClass createJobClass(String name) throws JobManagerException;
+	JobClass createJobClass(String jobClassName, int concurrency, long maxWaitTime, long maxRunTime) throws JobManagerException;
 
 	/**
-	 * ジョブクラスを作成して返却する。
-	 * 
-	 * @param name
-	 * @param concurrency
-	 * @param maxWaitTime
-	 * @param maxRuntime
-	 * @return
-	 * @throws JobManagerException 
+	 * Create the job class with specific name.
+	 * @param jobClassName Name of the job class
 	 */
-	JobClass createJobClass(String name, int concurrency, long maxWaitTime, long maxRuntime) throws JobManagerException;
-	
-	/**
-	 * 
-	 * @param name
-	 * @return
-	 */
-	JobClass getJobClass(String name);
+	JobClass createJobClass(String jobClassName) throws JobManagerException;
 
 	/**
-	 * job name から job classを取得する。
-	 * @param jobName
-	 * @return
+	 * Assign a job to an existing job class.
+	 * @param jobName The name of job
+	 * @param jobClassName The job class name.
 	 */
-	JobClass [] findJobClassForJob(String jobName);
-	
-	/**
-	 * 内部で使用しているschedulerオブジェクトを返却する。
-	 * @return
-	 */
-	Object getSchedulerObject();
-	
-	/**
-	 * 
-	 * @param name
-	 * @throws JobManagerException 
-	 */
-	void deleteJobClass(String name) throws JobManagerException;
-	
-	/**
-	 * createJob
-	 * ジョブの作成
-	 * @param name
-	 * @param scriptPathAndArguments
-	 * @return
-	 * @throws JobManagerException 
-	 */
-	JobDetail createJob(String name, String [] scriptPathAndArguments, boolean usePredefined) throws JobManagerException;
-	
-	/**
-	 * createJob
-	 * ジョブの作成
-	 * @param name
-	 * @param scriptPathAndArguments
-	 * @param useOut
-	 * @param useErr
-	 * @return
-	 * @throws JobManagerException 
-	 */
-	JobDetail createJob(String name, String [] scriptPathAndArguments, boolean useOut, boolean useErr, boolean usePredefined) throws JobManagerException;
+	void assignJobClass(String jobName, String jobClassName) throws JobManagerException;
 
 	/**
-	 * createJob
-	 * ジョブの作成
-	 * @param name
-	 * @param className
-	 * @param methodSignature
-	 * @param args
-	 * @return
-	 * @throws JobManagerException 
+	 * Delete a job class.
+	 * @param jobClassName The job class name.
 	 */
-	JobDetail createJob(String name, String className, String methodSignature, Object [] args) throws JobManagerException;
+	void deleteJobClass(String jobClassName) throws JobManagerException;
 
 	/**
-	 * createJob
-	 * ジョブの作成
-	 * @param name
-	 * @param filterspec
-	 * @param methodSignature
-	 * @param args
-	 * @return
-	 * @throws JobManagerException 
+	 * Remove a job from a job class.
+	 * @param jobName A job name
+	 * @param jobClassName The job class name
 	 */
-	JobDetail createJob(String name, String [] filterspec, String methodSignature, Object [] args) throws JobManagerException;
+	void revokeJobClass(String jobName, String jobClassName) throws JobManagerException;
 
 	/**
-	 * 
-	 * @param executable
-	 * @return
-	 * @throws JobManagerException 
+	 * Create a JobExecutable job
+	 * @param executable Executable job
 	 */
 	JobDetail createJob(JobExecutable executable) throws JobManagerException;
+
+
 	
-	/**
-	 * 制御ジョブの作成
-	 * @param name
-	 * @param type
-	 * @param args
-	 * @return
-	 * @throws JobManagerException 
-	 */
-	public JobDetail createControlJob(String name, ControlJobType type, String [] args) throws JobManagerException;
 
 	/**
-	 * getJob
-	 * ジョブの取得
-	 * @param name
-	 * @return
-	 * @throws JobManagerException 
+	 * Get created job by job name in job instance map
+	 * @param name The name of job.
 	 */
 	JobDetail getJob(String name) throws JobManagerException;
 
 	/**
-	 * assignJobClass
-	 * ジョブをジョブクラスに参加させる
-	 * @param jobName
-	 * @param className
-	 * @throws JobManagerException 
+	 * Get trigger create in JobFacade by trigger name.
+	 * @param name The name of trigger
 	 */
-	void assignJobClass(String jobName, String className) throws JobManagerException;
+	Trigger getTrigger(String name) throws JobManagerException;
 
 	/**
-	 * 
-	 * @param jobName
-	 * @param className
-	 * @throws JobManagerException 
+	 * Get a created job class by name
+	 * @param name The name of job class.
 	 */
-	void revokeJobClass(String jobName, String className) throws JobManagerException;
+	JobClass getJobClass(String name) throws JobManagerException;
 
 	/**
-	 * 
-	 * @param className
-	 * @throws JobManagerException 
+	 * Pause the Quartz scheduler.
 	 */
-	void revokeJobClass(String className) throws JobManagerException;
-	
+	void pause() throws JobManagerException;
+
 	/**
-	 * createTrigger
-	 * トリガの作成
-	 * @param name
-	 * @return
+	 * Resume the Quartz scheduler.
 	 */
-	Trigger createTrigger(String name);
-	
+	void resume() throws JobManagerException;
+
 	/**
-	 * createTrigger
-	 * トリガの作成
-	 * @param name
-	 * @param delay
-	 * @return
+	 * Interrupt a job which was scheduled.
+	 * @param name The name of job to be interrupted.
 	 */
-	Trigger createTrigger(String name, long delay);
-	
+	boolean interruptJob(String name) throws JobManagerException;
+
 	/**
-	 * 単発トリガを作成
-	 * @param name
-	 * @param at
-	 * @return
+	 * Search job classes on which the job specified by <code>name</code> was assigned
+	 * @param name The name of job.
 	 */
-	Trigger createTrigger(String name, Date at);
-	
+	JobClass[] findJobClassForJob(String name) throws JobManagerException;
+
 	/**
-	 * cronトリガの作成
-	 * @param name
-	 * @param crondef
-	 * @return
-	 * @throws JobManagerException 
+	 * The number of jobs is running currently by scheduler
+	 * @param name The name of job to be counted.
+	 */
+	int getJobRunningCount(String name) throws JobManagerException;
+
+	/**
+	 * revoke job from any existing job class
+	 * @param jobName a job name
+	 */
+	void revokeJobClass(String jobName) throws JobManagerException;
+
+	/**
+	 * Creating a trigger.
+	 * @param name The name of the trigger.
+	 */
+	Trigger createTrigger(String name) throws JobManagerException;
+
+	/**
+	 * Create Trigger with delay time
+	 * @param name Name of the trigger
+	 * @param delay The delay time in millisecond
+	 */
+	Trigger createTrigger(String name, long delay) throws JobManagerException;
+
+	/**
+	 * Create trigger with delay time and loop interval
+	 * @param name Name of the trigger
+	 * @param delay The delay time
+	 * @param interval Loop interval
+	 */
+	Trigger createTrigger(String name, long delay, long interval) throws JobManagerException;
+
+	/**
+	 * Create trigger to start at a specified time in the future
+	 * @param name Name of the trigger
+	 * @param at At time (long) the trigger will be started
+	 */
+	Trigger createTrigger(String name, Date at) throws JobManagerException;
+
+	/**
+	 * Create trigger with configure to start with cron-tab
+	 * @param name Name of the trigger
+	 * @param crondef A String represent for cron-tab configuration.
 	 */
 	Trigger createTrigger(String name, String crondef) throws JobManagerException;
 	
-	/**
-	 * トリガを取得
-	 * @param name
-	 * @return
-	 * @throws JobManagerException 
-	 */
-	Trigger getTrigger(String name) throws JobManagerException;
-	
-	// 2012-08-06 Luvina Insert start
-	/**
-	 * createTrigger: create trigger with name, time delay and interval
-	 * @param name
-	 * @param delay
-	 * @param interval
-	 * @return
-	 * @throws JobManagerException
-	 */
-	Trigger createTrigger(String name, long delay, long interval);
-
-	// 2012-08-06 Luvina Insert end
-
-	/**
-	 * Jobにスケジュールを割当
-	 * @param job
-	 * @param trigger
-	 * @throws JobManagerException 
-	 */
-	void scheduleJob(JobDetail job, Trigger trigger) throws JobManagerException;
 	
 	/**
-	 * jobをキックするが、その後jobが保持されない。
-	 * 
-	 * @param job
-	 * @param trigger
-	 * @throws JobManagerException 
+	 * Creating job.
+	 * @param jobName The name of job will be created.
+	 * @param clz Class of the job extends org.quartz.Job
+	 * @param data A map contain job data.
 	 */
-	void triggerJobNondurably(JobDetail job, Trigger trigger) throws JobManagerException;
+	JobDetail createJob(String jobName, Class<? extends Job> clz, JobDataMap data) throws JobManagerException;
 
 	/**
-	 * トリガ削除
-	 * @param trigger
-	 * @throws JobManagerException 
-	 */
-	void unscheduleJob(Trigger trigger) throws JobManagerException;
-	
-	/**
-	 * ジョブを削除
-	 * @param job
-	 * @throws JobManagerException 
+	 * Delete a job from scheduler and then remove it from JobFacade instance
+	 * @param job A job to be removed
 	 */
 	void removeJob(JobDetail job) throws JobManagerException;
-	
-	/**
-	 * JobNetを作成
-	 * @param name
-	 * @return
-	 */
-	JobNet createJobNet(String name);
 
 	/**
-	 * JobNet取得
-	 * @param name
-	 * @return
+	 * Un-schedule a job that specified in a trigger
+	 * @param trigger The trigger of un-schedule job.
 	 */
-	JobNet getJobNet(String name);
+	void unscheduleJob(Trigger trigger) throws JobManagerException;
 
 	/**
-	 * JobNet内に 実行端末を作成
-	 * @param net
-	 * @param name
-	 * @param jobName
-	 * @return
+	 * Schedule a job with parameters are specified in a trigger.
+	 * @param job The Job to be scheduled
+	 * @param trigger The trigger of job.
 	 */
-	Terminal createForceRunTerminal(JobNet net, String name, String jobName);
-	
-	/**
-	 * JobNet内に 実行端末を作成 ディレイ付き
-	 * @param net
-	 * @param name
-	 * @param jobName
-	 * @param interval
-	 * @return
-	 */
-	Terminal createForceRunTerminal(JobNet net, String name, String jobName, long interval);
-	
-	/**
-	 * JobNet内に実行抑制端末を作成
-	 * @param net
-	 * @param name
-	 * @param jobName
-	 * @return
-	 */
-	Terminal createProhibitTerminal(JobNet net, String name, String jobName);
-	
-	/**
-	 * JobNet内に実行抑制端末を作成 タイムアウト付き
-	 * @param net
-	 * @param name
-	 * @param jobName
-	 * @param interval
-	 * @return
-	 */
-	Terminal createProhibitTerminal(JobNet net, String name, String jobName, long interval);
+	void scheduleJob(JobDetail job, Trigger trigger) throws JobManagerException;
 
 	/**
-	 * オペレータ作成
-	 * @param net
-	 * @param name
-	 * @return
-	 */
-	Operator createOrOperator(JobNet net, String name);
-	Operator createAndOperator(JobNet net, String name);
-	Operator createXorOperator(JobNet net, String name);
-	Operator createNotOperator(JobNet net, String name);
-	Operator createCounterOperator(JobNet net, String name, int count);
-	
-	/**
-	 * JobNetのノードを接続
-	 * @param net
-	 * @param upper
-	 * @param lower
-	 * @throws ClassCastException
-	 * @throws ConditionBoardException
-	 */
-	void connect(JobNet net, String upper, String lower) throws ClassCastException, ConditionBoardException;
-	
-	/**
-	 * JobNetのノード間の接続を切る
-	 * @param net
-	 * @param upper
-	 * @param lower
-	 */
-	void disconnect(JobNet net, String upper, String lower);
-
-	/**
-	 * シグナル用擬似ジョブを作成
-	 * @param net
-	 * @param name
-	 * @return
-	 */
-	Receiver createInterruptFollower(JobNet net, String name);
-	
-	/**
-	 * JobNetの擬似Jobにシグナル
-	 * @param net
-	 * @param portName
-	 * @param v
-	 */
-	void signalNet(JobNet net, String portName, boolean v);
-
-	/**
-	 * JobNet名を列挙
-	 * @return
-	 */
-	Set<String> keySetNet();
-	
-	/**
-	 * 全ノードのリストを取得
-	 * @return
-	 */
-	List<Object> getNodeList();
-	
-	/**
-	 * JobNetのノードをすべて取得
-	 * @param netName
-	 * @return
-	 */
-	List<Object> getNodeList(String netName);
-	
-	/**
-	 * JobNetのノードを取得
-	 * @param netName
-	 * @param objname
-	 * @return
-	 */
-	Object getNode(String netName, String objname);
-
-	/**
-	 * Job名を列挙
-	 * @return
-	 */
-	Set<String> keySetJob();
-	
-	/**
-	 * JobClass名を列挙
-	 * @return
-	 */
-	Set<String> keySetClass();
-
-	/**
-	 * トリガのキーを列挙
-	 * @return
-	 */
-	Set<TriggerKey> getTriggerKeys();
-	
-	/**
-	 * トリガを取得
-	 * @param key
-	 * @return
-	 */
-	Trigger getTrigger(TriggerKey key);
-
-	/**
-	 * get the JobReceiver connected to the job with given name.
-	 * @param name
-	 * @return
-	 */
-	JobReceiver getJobReceiver(String name);
-	
-	/**
-	 * スケジューラを一時停止
-	 * @throws JobManagerException 
-	 */
-	void pause() throws JobManagerException;
-	
-	/**
-	 * スケジューラを再開
-	 * @throws JobManagerException 
-	 */
-	void resume() throws JobManagerException;
-	
-	/**
-	 * Jobの実行結果を取得
-	 * @param name
-	 * @return
-	 */
-	List<JobResult> getJobResult(String name);
-
-	/**
-	 * JobKeyを生成
-	 * @param name
-	 * @return
+	 * Create JobKey from job name.
+	 * @param name Name of job
+	 * @return JobKey
 	 */
 	JobKey jobKeyForName(String name);
-	
-	/**
-	 * TriggerKeyを生成
-	 * @param name
-	 * @return
-	 */
-	TriggerKey triggerKeyForName(String name);
 
 	/**
-	 * Jobの最長実行時間を設定
-	 * @param name
-	 * @param timelength
-	 * @throws JobManagerException 
+	 * Get the scheduler object which is used internally.
+	 * @return Object scheduler object
 	 */
-	void setJobLastingTime(String name, long timelength) throws JobManagerException;
-
-	/**
-	 * ジョブの出力するデータの最大保持サイズを設定
-	 * ShellJobだけに適用可能。 ShellJob以外のジョブに設定するとException。
-	 * @param name
-	 * @param size
-	 * @throws JobManagerException
-	 */
-	void setJobDataReceiveSize(String name, int size) throws JobManagerException;
-
-	/**
-	 * ジョブの出力するデータの最大保持サイズを取得
-	 * 
-	 * @param name
-	 * @return
-	 * @throws JobManagerException
-	 */
-	int getJobDataReceiveSize(String name) throws JobManagerException;
-	
-	/**
-	 * 実行結果の履歴保持数を設定
-	 * @param name
-	 * @param length
-	 * @throws JobManagerException
-	 */
-	void setJobHistoryLength(String name, int length) throws JobManagerException;
-
-	/**
-	 * 実行結果の履歴保持数を設定
-	 * @param name
-	 * @return
-	 * @throws JobManagerException
-	 */
-	int getJobHistoryLength(String name) throws JobManagerException;
-	
-	/**
-	 * 実行中のJobを停止
-	 * 
-	 * @param name
-	 * @return
-	 * @throws JobManagerException 
-	 */
-	boolean interruptJob(String name) throws JobManagerException;
-	
-	/**
-	 * 現在実行中のジョブをリストアップ
-	 * 一つのジョブが複数同時に実行中の場合は、一つだけ返される。
-	 * @return
-	 */
-	Set<String> getRunningJobSet();
-
-	/**
-	 * 次の実行までの時間を返す、実行の予定が無い場合、負の値が返される。
-	 * ミリ秒
-	 * @param jobname
-	 * @return
-	 * @throws JobManagerException 
-	 */
-	long getJobNextFireLatency(String jobname) throws JobManagerException;
-
-	/**
-	 * ジョブ名から、関連付けられているトリガを取得
-	 * 
-	 * @param jobname
-	 * @return
-	 * @throws JobManagerException 
-	 */
-	List<Trigger> getRelatedTrigger(String jobname) throws JobManagerException;
-	
-	/**
-	 * ジョブは何個（何並列）実行中か？
-	 * 
-	 * @param jobname
-	 * @return
-	 */
-	int getJobRunningCount(String jobname);
-	
+	Object getSchedulerObject();
 }
